@@ -88,6 +88,10 @@ struct thread
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
+    int64_t sleep_ticks;
+    struct lock * w_lock;               /* Thread wait for a lock. */
+    struct list locks;                  /* list of locks. */
+    int org_priority;                   /* Origninal priority. */
     struct list_elem allelem;           /* List element for all threads list. */
 
     /* Shared between thread.c and synch.c. */
@@ -126,6 +130,10 @@ const char *thread_name (void);
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
 
+void thread_sleep (int64_t ticks);
+void thread_wakeup (void);
+bool thread_comp (struct list_elem * a, struct list_elem *b,void *aux);
+void thread_update_priority (struct thread *t);
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);

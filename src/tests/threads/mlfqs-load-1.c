@@ -22,7 +22,7 @@ test_mlfqs_load_1 (void)
   int load_avg;
   
   ASSERT (thread_mlfqs);
-
+  
   msg ("spinning for up to 45 seconds, please wait...");
 
   start_time = timer_ticks ();
@@ -55,6 +55,6 @@ test_mlfqs_load_1 (void)
     fail ("load average stayed above 0.5 for more than 10 seconds");
   msg ("load average fell back below 0.5 (to %d.%02d)",
        load_avg / 100, load_avg % 100);
-
+  
   pass ();
 }

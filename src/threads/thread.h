@@ -92,6 +92,8 @@ struct thread
     struct lock * w_lock;               /* Thread wait for a lock. */
     struct list locks;                  /* list of locks. */
     int org_priority;                   /* Origninal priority. */
+    int nice;                           /* Niceness. */
+    int recent_cpu;                     /* Recent CPU. */
     struct list_elem allelem;           /* List element for all threads list. */
 
     /* Shared between thread.c and synch.c. */
@@ -145,5 +147,11 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+void thread_mlfqs_update_load_avg (void);
+void thread_mlfqs_update_recent_cpu (void);
+void thread_mlfqs_update_all_priority ();
+void thread_mlfqs_update_priority (struct thread *t);
+void thread_mlfqs_increase_recent_cpu_by_one (void);
 
 #endif /* threads/thread.h */

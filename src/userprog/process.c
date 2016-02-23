@@ -46,7 +46,20 @@ process_execute (const char *file_name)
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (command, PRI_DEFAULT, start_process, arguments);
   if (tid == TID_ERROR)
-    palloc_free_page (fn_copy); 
+    palloc_free_page (fn_copy);
+  else {
+    struct child * this_child;
+    child = calloc (1, sizeof * this_child);
+    struct thread *cur = thread_current ();
+    if (this_child != NULL)
+    {
+      this_child->child_tid = tid;
+      this_child->exited = false;
+      child->waiting = false;
+      list_push_back (&cur->children, &this_child->elem_child_status);
+    }
+    
+  }
   return tid;
 }
 

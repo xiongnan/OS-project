@@ -114,6 +114,13 @@ struct thread
     tid_t parent_tid                    /* parent thread id */
     struct list children;               /* list of its children */
     struct lock lock_child;
+    struct condition cond_child;
+    struct file *exec_file;
+    /* signal to indicate the child's executable-loading status:
+     *  - 0: has not been loaded
+     *  - -1: load failed
+     *  - 1: load success*/
+    int child_load_status;
 #endif
 
     /* Owned by thread.c. */

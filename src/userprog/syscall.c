@@ -124,14 +124,35 @@ exit (int status)
 pid_t
 exec (const char *cmd_line)
 {
+  /* a thread's id. When there is a user process within a kernel thread, we
+   * use one-to-one mapping from tid to pid, which means pid = tid
+   */
+  tid_t tid;
+  struct thread *cur;
   
+  /* check if the user pinter is valid */
+  if (!valid_pointer (cmd_line))
+  {
+    exit (-1);
+  }
+  
+  cur = thread_current ();
+  cur->child_load_status = 0;
+  tid = process_execute (cmd_line);
+  lock_acquire(&cur->lock_child);
+  while (cur->child_load_status == 0)
+    cond_wait(&cur->cond_child, &cur->lock_child);
+  if (cur->child_load_status == -1)
+    tid = -1;
+  lock_release(&cur->lock_child);
+  return tid;
 }
 
 
 int
 wait (pid_t pid)
 {
-
+  return process_wait(pid);
 }
 
 

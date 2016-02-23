@@ -78,6 +78,26 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
+  
+  int load_status;
+  struct thread *cur = thread_current ();
+  struct thread *parent;
+  
+  if (!success)
+    load_status = -1;
+  else
+    load_status = 1;
+  
+  parent = find_thread (cur->parent_id);
+  if (parent != NULL)
+  {
+    lock_acquire(&parent->lock_child);
+    parent->child_load_status = load_status;
+    cond_signal(&parent->cond_child, &parent->lock_child);
+    lock_release(&parent->lock_child);
+  }
+
+  
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
@@ -104,9 +124,43 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED) 
+process_wait (tid_t child_tid) 
 {
-  return -1;
+  int status;
+  struct thread *cur;
+  struct child_status *child = NULL;
+  struct list_elem *e;
+  if (child_tid != TID_ERROR)
+  {
+    cur = thread_current ();
+    e = list_tail (&cur->children);
+    while ((e = list_prev (e)) != list_head (&cur->children))
+    {
+      child = list_entry(e, struct child_status, elem_child_status);
+      if (child->child_tid == child_tid)
+        break;
+    }
+    
+    if (child == NULL)
+      status = -1;
+    else
+    {
+      lock_acquire(&cur->lock_child);
+      while (find_thread (child_tid) != NULL)
+        cond_wait (&cur->cond_child, &cur->lock_child);
+      if (!child->exited || child->waiting)
+        status = -1;
+      else
+      {
+        status = child->child_exit_status;
+        child->waiting = true;
+      }
+      lock_release(&cur->lock_child);
+    }
+  }
+  else
+    status = TID_ERROR;
+  return status;
 }
 
 /* Free the current process's resources. */
@@ -132,6 +186,33 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
+  
+  struct thread *parent;
+  struct list_elem *e;
+  struct list_elem *next;
+  struct child *this_child;
+  /*free children list*/
+  e = list_begin (&cur->children);
+  while (e != list_tail(&cur->children))
+  {
+    next = list_next (e);
+    this_child = list_entry (e, struct child, elem_child_status);
+    list_remove (e);
+    free (this_child);
+    e = next;
+  }
+  
+  parent = find_thread (cur->parent_tid);
+  if (parent != NULL)
+  {
+    lock_acquire (&parent->lock_child);
+    if (parent->child_load_status == 0)
+      parent->child_load_status = -1;
+    cond_signal (&parent->cond_child, &parent->lock_child);
+    lock_release (&parent->lock_child);
+  }
+
+  
 }
 
 /* Sets up the CPU for running user code in the current

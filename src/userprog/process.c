@@ -447,7 +447,7 @@ setup_stack (void **esp, char *file_name)
       if (success)
       {
         *esp = PHYS_BASE;
-        /* scan file_name backward, push each token on stack */
+        /* push arguments to stack */
         int j = 0;
         bool space_added = true;
         int len = strlen(file_name);
@@ -471,12 +471,60 @@ setup_stack (void **esp, char *file_name)
           
         }
         
+        *(file_name + j) = '\0';
+        j++;
+        
         int arg_length = j;
         
         *esp -= arg_length;
         memcpy(*esp, file_name, arg_length);
         
         
+        char * arg_start = *esp;
+        
+        /* push command to stack */
+        
+        char * command = thread_current ()->name;
+        int comm_length = strlen(command) + 1;
+        *esp -= comm_length;
+        memcpy(*esp, command, comm_length);
+        
+        
+        /* set alignment */
+        int total_length = arg_length + comm_length;
+        *esp -= 4 - total_length % 4;
+        
+        /* push an null pointer */
+        *esp -= 4;
+        * (uint32_t *) *esp = (uint32_t) NULL;
+        
+        int argc = 0;
+        for (int i = total_length - 1; i > 0; i--)
+        {
+          char * curr = arg_start + i;
+          if (*curr == '\0' && i < total_length - 1)
+          {
+            *esp -= 4;
+            * (uint32_t *) *esp = (uint32_t) curr + 1;
+            argc++;
+          }
+        }
+        
+        *esp -= 4;
+        * (uint32_t *) *esp = (uint32_t) arg_start;
+        argc++;
+        
+        /*push argv*/
+        * (uint32_t *) (*esp - 4) = *(uint32_t *) esp;
+        *esp -= 4;
+        
+        /*push argc*/
+        *esp -= 4;
+        * (int *) *esp = argc;
+        
+        /*push return address*/
+        *esp -= 4;
+        * (uint32_t *) *esp = 0x0;
         
         
       } else {

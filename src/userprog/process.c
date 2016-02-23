@@ -435,19 +435,53 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 static bool
-setup_stack (void **esp, const char *file_name)
+setup_stack (void **esp, char *file_name)
 {
   uint8_t *kpage;
   bool success = false;
 
   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
-    {
+  {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success)
+      {
         *esp = PHYS_BASE;
-      else
+        /* scan file_name backward, push each token on stack */
+        int j = 0;
+        bool space_added = true;
+        int len = strlen(file_name);
+        for (int i = 0; i < len; i++)
+        {
+          char curr = *(file_name + i);
+          if (curr == ' ' || curr == '\0')
+          {
+            if (space_added) {
+              continue;
+            } else {
+              *(file_name + j) = '\0';
+              j++;
+              space_added = true;
+            }
+          } else {
+            *(file_name + j) = *(file_name + i);
+            j++;
+            space_added = false;
+          }
+          
+        }
+        
+        int arg_length = j;
+        
+        *esp -= arg_length;
+        memcpy(*esp, file_name, arg_length);
+        
+        
+        
+        
+      } else {
         palloc_free_page (kpage);
+      }
     }
   return success;
 }

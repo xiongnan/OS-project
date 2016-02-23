@@ -547,6 +547,18 @@ void thread_mlfqs_increase_recent_cpu_by_one (void){
 }
 
 
+struct thread * find_thread(tid_t tid) {
+  struct thread * result;
+  for (struct list_elem * e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e)) {
+  {
+    t = list_entry (e, struct thread, allelem);
+    if (t->tid == id){
+      return t;
+    }
+  }
+  return NULL;
+}
+
 
 
 /* Idle thread.  Executes when no other thread is ready to run.

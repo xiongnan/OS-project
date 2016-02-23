@@ -14,6 +14,15 @@ enum thread_status
     THREAD_DYING        /* About to be destroyed. */
   };
 
+/* stores info for all its children */
+struct child {
+  tid_t child_tid;
+  bool exited;
+  bool waiting;
+  int exit_status;
+  struct list_elem elem_child_status;
+};
+
 /* Thread identifier type.
    You can redefine this to whatever type you like. */
 typedef int tid_t;
@@ -102,6 +111,9 @@ struct thread
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
+    tid_t parent_tid                    /* parent thread id */
+    struct list children;               /* list of its children */
+    struct lock lock_child;
 #endif
 
     /* Owned by thread.c. */
@@ -153,5 +165,7 @@ void thread_mlfqs_update_recent_cpu (void);
 void thread_mlfqs_update_all_priority ();
 void thread_mlfqs_update_priority (struct thread *t);
 void thread_mlfqs_increase_recent_cpu_by_one (void);
+
+struct thread * find_thread(tid_t tid);
 
 #endif /* threads/thread.h */

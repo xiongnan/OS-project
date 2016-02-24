@@ -14,14 +14,6 @@ enum thread_status
     THREAD_DYING        /* About to be destroyed. */
   };
 
-/* stores info for all its children */
-struct child {
-  tid_t child_tid;
-  bool exited;
-  bool waiting;
-  int exit_status;
-  struct list_elem elem_child_status;
-};
 
 /* Thread identifier type.
    You can redefine this to whatever type you like. */
@@ -32,6 +24,15 @@ typedef int tid_t;
 #define PRI_MIN 0                       /* Lowest priority. */
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
+
+/* stores info for all its children */
+struct child {
+  tid_t child_tid;
+  bool exited;
+  bool waiting;
+  int exit_status;
+  struct list_elem elem_child_status;
+};
 
 /* A kernel thread or user process.
 

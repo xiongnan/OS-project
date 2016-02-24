@@ -49,13 +49,13 @@ process_execute (const char *file_name)
     palloc_free_page (fn_copy);
   else {
     struct child * this_child;
-    child = calloc (1, sizeof * this_child);
+    this_child = calloc (1, sizeof * this_child);
     struct thread *cur = thread_current ();
     if (this_child != NULL)
     {
       this_child->child_tid = tid;
       this_child->exited = false;
-      child->waiting = false;
+      this_child->waiting = false;
       list_push_back (&cur->children, &this_child->elem_child_status);
     }
     
@@ -88,7 +88,7 @@ start_process (void *file_name_)
   else
     load_status = 1;
   
-  parent = find_thread (cur->parent_id);
+  parent = find_thread (cur->parent_tid);
   if (parent != NULL)
   {
     lock_acquire(&parent->lock_child);
@@ -128,7 +128,7 @@ process_wait (tid_t child_tid)
 {
   int status;
   struct thread *cur;
-  struct child_status *child = NULL;
+  struct child * this_child = NULL;
   struct list_elem *e;
   if (child_tid != TID_ERROR)
   {
@@ -136,12 +136,12 @@ process_wait (tid_t child_tid)
     e = list_tail (&cur->children);
     while ((e = list_prev (e)) != list_head (&cur->children))
     {
-      child = list_entry(e, struct child_status, elem_child_status);
-      if (child->child_tid == child_tid)
+      this_child = list_entry(e, struct child, elem_child_status);
+      if (this_child->child_tid == child_tid)
         break;
     }
     
-    if (child == NULL)
+    if (this_child == NULL)
       status = -1;
     else
     {
@@ -152,8 +152,8 @@ process_wait (tid_t child_tid)
         status = -1;
       else
       {
-        status = child->child_exit_status;
-        child->waiting = true;
+        status = this_child->child_exit_status;
+        this_child->waiting = true;
       }
       lock_release(&cur->lock_child);
     }
@@ -302,7 +302,7 @@ struct Elf32_Phdr
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
 
-static bool setup_stack (void **esp);
+static bool setup_stack (void **esp, char *file_name);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -556,7 +556,8 @@ setup_stack (void **esp, char *file_name)
         int j = 0;
         bool space_added = true;
         int len = strlen(file_name);
-        for (int i = 0; i < len; i++)
+        int i = 0;
+        for (i = 0; i < len; i++)
         {
           char curr = *(file_name + i);
           if (curr == ' ' || curr == '\0')
@@ -604,7 +605,7 @@ setup_stack (void **esp, char *file_name)
         * (uint32_t *) *esp = (uint32_t) NULL;
         
         int argc = 0;
-        for (int i = total_length - 1; i > 0; i--)
+        for (i = total_length - 1; i > 0; i--)
         {
           char * curr = arg_start + i;
           if (*curr == '\0' && i < total_length - 1)

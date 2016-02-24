@@ -124,7 +124,7 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid) 
+process_wait (tid_t child_tid)
 {
   int status;
   struct thread *cur;
@@ -211,6 +211,14 @@ process_exit (void)
     cond_signal (&parent->cond_child, &parent->lock_child);
     lock_release (&parent->lock_child);
   }
+  
+  /* re-enable the file's writable property*/
+  if (cur->exec_file != NULL)
+    file_allow_write (cur->exec_file);
+  
+  /* free files whose owner is the current thread*/
+  close_file_by_owner (cur->tid);
+
 
   
 }
@@ -329,6 +337,9 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: open failed\n", t->name);
       goto done; 
     }
+  
+  t->exec_file = file;
+  file_deny_write (file);
 
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr

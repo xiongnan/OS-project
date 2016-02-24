@@ -335,6 +335,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (file == NULL) 
     {
       printf ("load: %s: open failed\n", t->name);
+      file_close (file);
       goto done; 
     }
   

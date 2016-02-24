@@ -100,8 +100,8 @@ start_process (void *file_name_)
   
 
   /* If load failed, quit. */
-  palloc_free_page (file_name);
-  if (!success) 
+  palloc_free_page (pg_round_down(file_name));
+  if (!success)
     thread_exit ();
 
   /* Start the user process by simulating a return from an

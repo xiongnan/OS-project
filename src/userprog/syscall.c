@@ -127,7 +127,7 @@ exit (int status)
       
       this_child = list_entry (e, struct child, elem_child_status);
       
-      if (this_child->child_id == cur->tid)
+      if (this_child->child_tid == cur->tid)
       {
         lock_acquire (&parent->lock_child);
         this_child->exited = true;
@@ -410,11 +410,11 @@ allocate_fd ()
 bool
 valid_pointer(const void * ptr)
 {
-  if (uvaddr == NULL || !is_user_vaddr (ptr)) {
+  if (ptr == NULL || !is_user_vaddr (ptr)) {
     return false;
   }
   struct thread * cur = thread_current ();
-  void * res = pagedir_get_page (cur->pagedir, usr_ptr);
+  void * res = pagedir_get_page (cur->pagedir, ptr);
   return res != NULL;
 }
 

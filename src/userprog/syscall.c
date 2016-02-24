@@ -258,20 +258,7 @@ read (int fd, void *buffer, unsigned size)
   {
     if (!is_valid_uvaddr (buffer_tmp))
       exit (-1);
-    
-    if (pagedir_get_page (t->pagedir, buffer_tmp) == NULL)
-    {
-      struct suppl_pte *spte;
-      spte = get_suppl_pte (&t->suppl_page_table,
-                            pg_round_down (buffer_tmp));
-      if (spte != NULL && !spte->is_loaded)
-        load_page (spte);
-      else if (spte == NULL && buffer_tmp >= (esp - 32))
-        grow_stack (buffer_tmp);
-      else
-        exit (-1);
-    }
-    
+  
     /* Advance */
     if (buffer_size == 0)
     {

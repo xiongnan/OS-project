@@ -211,7 +211,7 @@ open (const char *file_name)
   struct file_descriptor *fd;
   int status = -1;
   
-  if (!is_valid_ptr (file_name))
+  if (!valid_pointer (file_name))
     exit (-1);
   
   lock_acquire (&fs_lock);
@@ -256,7 +256,7 @@ read (int fd, void *buffer, unsigned size)
   /* check the user memory pointing by buffer are valid */
   while (buffer_tmp != NULL)
   {
-    if (!is_valid_uvaddr (buffer_tmp))
+    if (!valid_pointer (buffer_tmp))
       exit (-1);
   
     /* Advance */
@@ -317,7 +317,7 @@ write (int fd, const void *buffer, unsigned size)
   /* check the user memory pointing by buffer are valid */
   while (buffer_tmp != NULL)
   {
-    if (!is_valid_ptr (buffer_tmp))
+    if (!valid_pointer (buffer_tmp))
       exit (-1);
     
     /* Advance */

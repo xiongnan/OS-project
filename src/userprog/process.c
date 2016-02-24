@@ -58,8 +58,7 @@ process_execute (const char *file_name)
 //      this_child->waiting = false;
 //      list_push_back (&cur->children, &this_child->elem_child_status);
 //    }
-  
-  }
+//  }
   return tid;
 }
 
@@ -162,7 +161,7 @@ process_wait (tid_t child_tid)
 //  else
 //    status = TID_ERROR;
 //  return status;
-  reutrn -1;
+  return -1;
 }
 
 /* Free the current process's resources. */
@@ -417,7 +416,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. */
-  if (!setup_stack (esp), file_name)
+  if (!setup_stack (esp, file_name))
     goto done;
 
   /* Start address. */

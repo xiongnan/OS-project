@@ -36,10 +36,9 @@ static void seek (int fd, unsigned position);
 static unsigned tell (int fd);
 static void close (int fd);
 
-
+static  bool valid_pointer(const void * ptr);
 static struct file_descriptor *get_open_file (int);
 static void close_open_file (int);
-static bool is_valid_uvaddr (const void *);
 static int allocate_fd (void);
 
 void
@@ -123,7 +122,7 @@ exit (int status)
   printf ("%s: exit(%d)\n", cur->name, status);
   struct thread * parent = find_thread (cur->parent_tid);
   if (parent != NULL) {
-    struct list_elem * e
+    struct list_elem * e;
     for (e = list_begin (&parent->children); e != list_end (&parent->children); e = list_next (e)) {
       
       this_child = list_entry (e, struct child, elem_child_status);

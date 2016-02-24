@@ -39,26 +39,26 @@ process_execute (const char *file_name)
   strlcpy (fn_copy, file_name, PGSIZE);
 
   /* split command with arguments */
-  char * command, * arguments;
-  command = strtok_r (fn_copy, " ", &arguments);
+  //char * command, * arguments;
+  //command = strtok_r (fn_copy, " ", &arguments);
   
     
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (command, PRI_DEFAULT, start_process, arguments);
+  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
-  else {
-    struct child * this_child;
-    this_child = calloc (1, sizeof * this_child);
-    struct thread *cur = thread_current ();
-    if (this_child != NULL)
-    {
-      this_child->child_tid = tid;
-      this_child->exited = false;
-      this_child->waiting = false;
-      list_push_back (&cur->children, &this_child->elem_child_status);
-    }
-    
+//  else {
+//    struct child * this_child;
+//    this_child = calloc (1, sizeof * this_child);
+//    struct thread *cur = thread_current ();
+//    if (this_child != NULL)
+//    {
+//      this_child->child_tid = tid;
+//      this_child->exited = false;
+//      this_child->waiting = false;
+//      list_push_back (&cur->children, &this_child->elem_child_status);
+//    }
+  
   }
   return tid;
 }
@@ -79,14 +79,14 @@ start_process (void *file_name_)
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
   
-  int load_status;
-  struct thread *cur = thread_current ();
-  struct thread *parent;
-  
-  if (!success)
-    load_status = -1;
-  else
-    load_status = 1;
+//  int load_status;
+//  struct thread *cur = thread_current ();
+//  struct thread *parent;
+//  
+//  if (!success)
+//    load_status = -1;
+//  else
+//    load_status = 1;
   
 //  parent = find_thread (cur->parent_tid);
 //  if (parent != NULL)
@@ -100,10 +100,10 @@ start_process (void *file_name_)
   
 
   /* If load failed, quit. */
-  
+  palloc_free_page (file_name);
   if (!success)
     thread_exit ();
-  palloc_free_page (pg_round_down(file_name));
+  //palloc_free_page (pg_round_down(file_name));
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -127,41 +127,42 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid)
 {
-  int status;
-  struct thread *cur;
-  struct child * this_child = NULL;
-  struct list_elem *e;
-  if (child_tid != TID_ERROR)
-  {
-    cur = thread_current ();
-    e = list_tail (&cur->children);
-    while ((e = list_prev (e)) != list_head (&cur->children))
-    {
-      this_child = list_entry(e, struct child, elem_child_status);
-      if (this_child->child_tid == child_tid)
-        break;
-    }
-    
-    if (this_child == NULL)
-      status = -1;
-    else
-    {
-      lock_acquire(&cur->lock_child);
-      while (find_thread (child_tid) != NULL)
-        cond_wait (&cur->cond_child, &cur->lock_child);
-      if (!this_child->exited || this_child->waiting)
-        status = -1;
-      else
-      {
-        status = this_child->exit_status;
-        this_child->waiting = true;
-      }
-      lock_release(&cur->lock_child);
-    }
-  }
-  else
-    status = TID_ERROR;
-  return status;
+//  int status;
+//  struct thread *cur;
+//  struct child * this_child = NULL;
+//  struct list_elem *e;
+//  if (child_tid != TID_ERROR)
+//  {
+//    cur = thread_current ();
+//    e = list_tail (&cur->children);
+//    while ((e = list_prev (e)) != list_head (&cur->children))
+//    {
+//      this_child = list_entry(e, struct child, elem_child_status);
+//      if (this_child->child_tid == child_tid)
+//        break;
+//    }
+//    
+//    if (this_child == NULL)
+//      status = -1;
+//    else
+//    {
+//      lock_acquire(&cur->lock_child);
+//      while (find_thread (child_tid) != NULL)
+//        cond_wait (&cur->cond_child, &cur->lock_child);
+//      if (!this_child->exited || this_child->waiting)
+//        status = -1;
+//      else
+//      {
+//        status = this_child->exit_status;
+//        this_child->waiting = true;
+//      }
+//      lock_release(&cur->lock_child);
+//    }
+//  }
+//  else
+//    status = TID_ERROR;
+//  return status;
+  reutrn -1;
 }
 
 /* Free the current process's resources. */
@@ -188,38 +189,38 @@ process_exit (void)
       pagedir_destroy (pd);
     }
   
-  struct thread *parent;
-  struct list_elem *e;
-  struct list_elem *next;
-  struct child *this_child;
-  /*free children list*/
-  e = list_begin (&cur->children);
-  while (e != list_tail(&cur->children))
-  {
-    next = list_next (e);
-    this_child = list_entry (e, struct child, elem_child_status);
-    list_remove (e);
-    free (this_child);
-    e = next;
-  }
-  
-  parent = find_thread (cur->parent_tid);
-  if (parent != NULL)
-  {
-    lock_acquire (&parent->lock_child);
-    if (parent->child_load_status == 0)
-      parent->child_load_status = -1;
-    cond_signal (&parent->cond_child, &parent->lock_child);
-    lock_release (&parent->lock_child);
-  }
-  
-  /* re-enable the file's writable property*/
-  if (cur->exec_file != NULL)
-    file_allow_write (cur->exec_file);
-  
-  /* free files whose owner is the current thread*/
-  close_file_by_owner (cur->tid);
-
+//  struct thread *parent;
+//  struct list_elem *e;
+//  struct list_elem *next;
+//  struct child *this_child;
+//  /*free children list*/
+//  e = list_begin (&cur->children);
+//  while (e != list_tail(&cur->children))
+//  {
+//    next = list_next (e);
+//    this_child = list_entry (e, struct child, elem_child_status);
+//    list_remove (e);
+//    free (this_child);
+//    e = next;
+//  }
+//  
+//  parent = find_thread (cur->parent_tid);
+//  if (parent != NULL)
+//  {
+//    lock_acquire (&parent->lock_child);
+//    if (parent->child_load_status == 0)
+//      parent->child_load_status = -1;
+//    cond_signal (&parent->cond_child, &parent->lock_child);
+//    lock_release (&parent->lock_child);
+//  }
+//  
+//  /* re-enable the file's writable property*/
+//  if (cur->exec_file != NULL)
+//    file_allow_write (cur->exec_file);
+//  
+//  /* free files whose owner is the current thread*/
+//  close_file_by_owner (cur->tid);
+//
 
   
 }
@@ -331,12 +332,11 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
   /* Open executable file. */
   
-  //file = filesys_open (file_name);
-  file = filesys_open (t->name);
+  file = filesys_open (file_name);
+  //file = filesys_open (t->name);
   if (file == NULL) 
     {
       printf ("load: %s: open failed\n", t->name);
-      file_close (file);
       goto done; 
     }
   
@@ -417,7 +417,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. */
-  if (!setup_stack (esp, file_name))
+  if (!setup_stack (esp), file_name)
     goto done;
 
   /* Start address. */
@@ -542,7 +542,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 static bool
-setup_stack (void **esp, char *file_name)
+setup_stack (void **esp, char * file_name)
 {
   uint8_t *kpage;
   bool success = false;
@@ -555,85 +555,85 @@ setup_stack (void **esp, char *file_name)
       {
         *esp = PHYS_BASE;
         /* push arguments to stack */
-        int j = 0;
-        bool space_added = true;
-        int len = strlen(file_name);
-        int i = 0;
-        for (i = 0; i < len; i++)
-        {
-          char curr = *(file_name + i);
-          if (curr == ' ' || curr == '\0')
-          {
-            if (space_added) {
-              continue;
-            } else {
-              *(file_name + j) = '\0';
-              j++;
-              space_added = true;
-            }
-          } else {
-            *(file_name + j) = *(file_name + i);
-            j++;
-            space_added = false;
-          }
-          
-        }
-        
-        *(file_name + j) = '\0';
-        j++;
-        
-        int arg_length = j;
-        
-        *esp -= arg_length;
-        memcpy(*esp, file_name, arg_length);
-        
-        
-        char * arg_start = *esp;
-        
-        /* push command to stack */
-        
-        char * command = thread_current ()->name;
-        int comm_length = strlen(command) + 1;
-        *esp -= comm_length;
-        memcpy(*esp, command, comm_length);
-        
-        
-        /* set alignment */
-        int total_length = arg_length + comm_length;
-        *esp -= 4 - total_length % 4;
-        
-        /* push an null pointer */
-        *esp -= 4;
-        * (uint32_t *) *esp = (uint32_t) NULL;
-        
-        int argc = 0;
-        for (i = total_length - 1; i > 0; i--)
-        {
-          char * curr = arg_start + i;
-          if (*curr == '\0' && i < total_length - 1)
-          {
-            *esp -= 4;
-            * (uint32_t *) *esp = (uint32_t) curr + 1;
-            argc++;
-          }
-        }
-        
-        *esp -= 4;
-        * (uint32_t *) *esp = (uint32_t) arg_start;
-        argc++;
-        
-        /*push argv*/
-        * (uint32_t *) (*esp - 4) = *(uint32_t *) esp;
-        *esp -= 4;
-        
-        /*push argc*/
-        *esp -= 4;
-        * (int *) *esp = argc;
-        
-        /*push return address*/
-        *esp -= 4;
-        * (uint32_t *) *esp = 0x0;
-        
+//        int j = 0;
+//        bool space_added = true;
+//        int len = strlen(file_name);
+//        int i = 0;
+//        for (i = 0; i < len; i++)
+//        {
+//          char curr = *(file_name + i);
+//          if (curr == ' ' || curr == '\0')
+//          {
+//            if (space_added) {
+//              continue;
+//            } else {
+//              *(file_name + j) = '\0';
+//              j++;
+//              space_added = true;
+//            }
+//          } else {
+//            *(file_name + j) = *(file_name + i);
+//            j++;
+//            space_added = false;
+//          }
+//          
+//        }
+//        
+//        *(file_name + j) = '\0';
+//        j++;
+//        
+//        int arg_length = j;
+//        
+//        *esp -= arg_length;
+//        memcpy(*esp, file_name, arg_length);
+//        
+//        
+//        char * arg_start = *esp;
+//        
+//        /* push command to stack */
+//        
+//        char * command = thread_current ()->name;
+//        int comm_length = strlen(command) + 1;
+//        *esp -= comm_length;
+//        memcpy(*esp, command, comm_length);
+//        
+//        
+//        /* set alignment */
+//        int total_length = arg_length + comm_length;
+//        *esp -= 4 - total_length % 4;
+//        
+//        /* push an null pointer */
+//        *esp -= 4;
+//        * (uint32_t *) *esp = (uint32_t) NULL;
+//        
+//        int argc = 0;
+//        for (i = total_length - 1; i > 0; i--)
+//        {
+//          char * curr = arg_start + i;
+//          if (*curr == '\0' && i < total_length - 1)
+//          {
+//            *esp -= 4;
+//            * (uint32_t *) *esp = (uint32_t) curr + 1;
+//            argc++;
+//          }
+//        }
+//        
+//        *esp -= 4;
+//        * (uint32_t *) *esp = (uint32_t) arg_start;
+//        argc++;
+//        
+//        /*push argv*/
+//        * (uint32_t *) (*esp - 4) = *(uint32_t *) esp;
+//        *esp -= 4;
+//        
+//        /*push argc*/
+//        *esp -= 4;
+//        * (int *) *esp = argc;
+//        
+//        /*push return address*/
+//        *esp -= 4;
+//        * (uint32_t *) *esp = 0x0;
+//        
         
       } else {
         palloc_free_page (kpage);

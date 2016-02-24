@@ -148,11 +148,11 @@ process_wait (tid_t child_tid)
       lock_acquire(&cur->lock_child);
       while (find_thread (child_tid) != NULL)
         cond_wait (&cur->cond_child, &cur->lock_child);
-      if (!child->exited || child->waiting)
+      if (!this_child->exited || this_child->waiting)
         status = -1;
       else
       {
-        status = this_child->child_exit_status;
+        status = this_child->exit_status;
         this_child->waiting = true;
       }
       lock_release(&cur->lock_child);

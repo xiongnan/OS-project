@@ -126,7 +126,7 @@ exit (int status)
       {
         lock_acquire (&parent->lock_child);
         child->exited = true;
-        child->child_exit_status = status;
+        child->exit_status = status;
         lock_release (&parent->lock_child);
       }
       

@@ -88,21 +88,22 @@ start_process (void *file_name_)
   else
     load_status = 1;
   
-  parent = find_thread (cur->parent_tid);
-  if (parent != NULL)
-  {
-    lock_acquire(&parent->lock_child);
-    parent->child_load_status = load_status;
-    cond_signal(&parent->cond_child, &parent->lock_child);
-    lock_release(&parent->lock_child);
-  }
+//  parent = find_thread (cur->parent_tid);
+//  if (parent != NULL)
+//  {
+//    lock_acquire(&parent->lock_child);
+//    parent->child_load_status = load_status;
+//    cond_signal(&parent->cond_child, &parent->lock_child);
+//    lock_release(&parent->lock_child);
+//  }
 
   
 
   /* If load failed, quit. */
-  palloc_free_page (pg_round_down(file_name));
+  
   if (!success)
     thread_exit ();
+  palloc_free_page (pg_round_down(file_name));
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in

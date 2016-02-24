@@ -3,6 +3,11 @@
 #include <syscall-nr.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "filesys/file.h"
+#include "filesys/filesys.h"
+#include "threads/vaddr.h"
+#include "userprog/pagedir.h"
+#include "threads/malloc.h"
 
 struct file_descriptor
 {
@@ -113,20 +118,21 @@ halt (void)
 void
 exit (int status)
 {
-  struct child_status *child;
+  struct child * this_child;
   struct thread * cur = thread_current ();
   printf ("%s: exit(%d)\n", cur->name, status);
   struct thread * parent = find_thread (cur->parent_tid);
   if (parent != NULL) {
-    for (struct list_elem * e = list_begin (&parent->children); e != list_end (&parent->children); e = list_next (e)) {
+    struct list_elem * e
+    for (e = list_begin (&parent->children); e != list_end (&parent->children); e = list_next (e)) {
       
-      child = list_entry (e, struct child, elem_child_status);
+      this_child = list_entry (e, struct child, elem_child_status);
       
-      if (child->child_id == cur->tid)
+      if (this_child->child_id == cur->tid)
       {
         lock_acquire (&parent->lock_child);
-        child->exited = true;
-        child->exit_status = status;
+        this_child->exited = true;
+        this_child->exit_status = status;
         lock_release (&parent->lock_child);
       }
       

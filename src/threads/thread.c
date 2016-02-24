@@ -193,7 +193,7 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
-  t->parent_id = thread_current ()->tid;
+  t->parent_tid = thread_current ()->tid;
   /* Prepare thread for first run by initializing its stack.
      Do this atomically so intermediate values for the 'stack' 
      member cannot be observed. */
@@ -549,11 +549,12 @@ void thread_mlfqs_increase_recent_cpu_by_one (void){
 
 struct thread * find_thread(tid_t tid) {
   struct thread * result;
+  
   for (struct list_elem * e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e)) {
   {
-    t = list_entry (e, struct thread, allelem);
-    if (t->tid == id){
-      return t;
+    result = list_entry (e, struct thread, allelem);
+    if (result->tid == id){
+      return result;
     }
   }
   return NULL;

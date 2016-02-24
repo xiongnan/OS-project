@@ -549,11 +549,11 @@ void thread_mlfqs_increase_recent_cpu_by_one (void){
 
 struct thread * find_thread(tid_t tid) {
   struct thread * result;
-  
-  for (struct list_elem * e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e)) {
+  struct list_elem * e = list_begin (&all_list)
+  for (; e != list_end (&all_list); e = list_next (e)) {
   {
     result = list_entry (e, struct thread, allelem);
-    if (result->tid == id){
+    if (result->tid == tid){
       return result;
     }
   }
